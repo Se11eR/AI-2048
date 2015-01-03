@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AI_2048
+﻿namespace AI_2048
 {
-    interface I2048MoveMaker
+    interface IMoveMaker2048
     {
-        Board2048 MakePlayerMove(Direction dir, Board2048 board);
+        Board2048 MakePlayerMove(Board2048 board,
+                                 Direction dir,
+                                 out int scoreDelta,
+                                 out bool nextMovePossible,
+                                 out bool boardChanged);
+
+        Board2048 MakeSpecificGameMove(Board2048 board, int row, int col, long tile);
 
         Board2048 MakeGameMove(Board2048 board);
     }

@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace AI_2048
 {
     internal class Game2048
     {
-        private readonly I2048MoveMaker __MoveMaker;
+        private readonly IMoveMaker2048 __MoveMaker;
         private readonly IAi2048 __Ai;
         public ulong Score { get; private set; }
 
-        private readonly Random __Random = new Random();
         private Board2048 __Board;
 
-        public Game2048(I2048MoveMaker moveMaker, IAi2048 ai = null)
+        public Game2048(IMoveMaker2048 moveMaker, IAi2048 ai = null)
         {
             __MoveMaker = moveMaker;
             __Ai = ai;
@@ -23,18 +21,19 @@ namespace AI_2048
 
         public void Run()
         {
-            bool movePossible = true;
+            bool nextMovePossible = true;
+            bool boardChanged = true;
             bool skip = false;
             do
             {
-                if (!skip && movePossible)
+                if (boardChanged && !skip && nextMovePossible)
                 {
                     __Board = __MoveMaker.MakeGameMove(__Board);
                 }
 
                 Display();
 
-                if (!skip && !movePossible)
+                if (!skip && !nextMovePossible)
                 {
                     using (new ColorOutput(ConsoleColor.Red))
                     {
@@ -51,22 +50,22 @@ namespace AI_2048
                     switch (input.Key)
                     {
                         case ConsoleKey.UpArrow:
-                            movePossible = Update(Direction.Up);
+                            nextMovePossible = Update(Direction.Up, out boardChanged);
                             skip = false;
                             break;
 
                         case ConsoleKey.DownArrow:
-                            movePossible = Update(Direction.Down);
+                            nextMovePossible = Update(Direction.Down, out boardChanged);
                             skip = false;
                             break;
 
                         case ConsoleKey.LeftArrow:
-                            movePossible = Update(Direction.Left);
+                            nextMovePossible = Update(Direction.Left, out boardChanged);
                             skip = false;
                             break;
 
                         case ConsoleKey.RightArrow:
-                            movePossible = Update(Direction.Right);
+                            nextMovePossible = Update(Direction.Right, out boardChanged);
                             skip = false;
                             break;
 
@@ -78,7 +77,7 @@ namespace AI_2048
                 else
                 {
                     var dir = __Ai.CalculateNextMove(__Board);
-                    movePossible = Update(dir);
+                    nextMovePossible = Update(dir, out boardChanged);
                 }
             }
             while (true); // use CTRL-C to break out of loop
@@ -118,11 +117,13 @@ namespace AI_2048
             }
         }
 
-        private bool Update(Direction dir)
+        private bool Update(Direction dir, out bool boardChanged)
         {
-            __Board = __MoveMaker.MakePlayerMove(dir, __Board);
-            Score = (ulong)__Board.Score;
-            return __Board.IsMovePossible;
+            int score;
+            bool movePossible;
+            __Board = __MoveMaker.MakePlayerMove(__Board, dir, out score, out movePossible, out boardChanged);
+            Score += (ulong)score;
+            return movePossible;
         }
 
         private void Display()

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AI_2048
 {
@@ -14,6 +10,21 @@ namespace AI_2048
         public const long CONST4 = 2;
         public const double CONTS2_PROB = 0.9;
         public const double CONTS4_PROB = 0.1;
+        private static readonly ulong[] __RowsMask = 
+        {
+            0xFFFFL,
+            0xFFFF0000L,
+            0xFFFF00000000L,
+            0xFFFF000000000000L
+        };
+
+        private static readonly ulong[] __ColsMask =
+        {
+            0x000F000F000F000F,
+            0x00F000F000F000F0,
+            0x0F000F000F000F00,
+            0xF000F000F000F000
+        };
 
         internal class Board2048EqualityComparer : IEqualityComparer<Board2048>
         {
@@ -34,20 +45,23 @@ namespace AI_2048
                 }
             }
         }
-
+        
         private long __Repr;
-        private long __Score;
-        private bool __IsMovePossible;
+
+        public Board2048(Board2048 b)
+        {
+            __Repr = b.__Repr;
+        }
 
         public long this[int row, int col]
         {
             get
             {
-                return (__Repr >> (row*16 + col*4)) & (0xF); 
+                return Helper.GetChunk(__Repr, row * 4 + col);
             }
             set
             {
-                __Repr = (~(0xFL << (row*16 + col*4)) & __Repr) | (value << (row*16 + col*4));
+                __Repr = Helper.SetChunk(__Repr, value, row * 4 + col);
             }
         }
 
@@ -62,6 +76,34 @@ namespace AI_2048
             }
 
             return count;
+        }
+
+        public long ExtractRow(int i)
+        {
+            return (long)(((ulong)__Repr & __RowsMask[i]) >> (i * 16));
+        }
+
+        public long ExtractColumn(int i)
+        {
+            var tmp = (long)(((ulong)__Repr & __ColsMask[i]) >> (i * 4));
+            return tmp & 0xF | ((tmp >> (( 4 - 1) * 4)) & 0xF0) 
+                             | ((tmp >> (( 8 - 2) * 4)) & 0xF00)
+                             | ((tmp >> ((12 - 3) * 4)) & 0xF000);
+        }
+
+        public void SetRow(long row, int i)
+        {
+            __Repr = (~((long)__RowsMask[i]) & __Repr) | (row << (i * 16));
+        }
+
+        public void SetColumn(long col, int i)
+        {
+            __Repr = (~((long)__ColsMask[i]) & __Repr)
+                        | ((col & 0xF 
+                        | (((col >> 4) & 0xF) << 16) 
+                        | (((col >> 8) & 0xF) << 32)
+                        | (((col >> 12) & 0xF) << 48)) << (i * 4));
+
         }
 
         public int Rows
@@ -80,20 +122,7 @@ namespace AI_2048
             }
         }
 
-        public long Score
-        {
-            get { return __Score; }
-            set { __Score = value; }
-        }
-
-        public bool IsMovePossible
-        {
-            get
-            {
-                return __IsMovePossible; 
-            }
-            set { __IsMovePossible = value; }
-        }
+        #region IEquatable
 
         public bool Equals(Board2048 other)
         {
@@ -119,5 +148,7 @@ namespace AI_2048
 
             return s.ToString();
         }
+
+        #endregion
     }
 }
