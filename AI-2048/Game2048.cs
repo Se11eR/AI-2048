@@ -6,14 +6,16 @@ namespace AI_2048
     internal class Game2048
     {
         private readonly I2048MoveMaker __MoveMaker;
+        private readonly IAi2048 __Ai;
         public ulong Score { get; private set; }
 
         private readonly Random __Random = new Random();
         private Board2048 __Board;
 
-        public Game2048(I2048MoveMaker moveMaker)
+        public Game2048(I2048MoveMaker moveMaker, IAi2048 ai = null)
         {
             __MoveMaker = moveMaker;
+            __Ai = ai;
             Score = 0;
             __Board = new Board2048();
             __Board = __MoveMaker.MakeGameMove(__Board);
@@ -22,16 +24,17 @@ namespace AI_2048
         public void Run()
         {
             bool movePossible = true;
+            bool skip = false;
             do
             {
-                if (movePossible)
+                if (!skip && movePossible)
                 {
                     __Board = __MoveMaker.MakeGameMove(__Board);
                 }
 
                 Display();
 
-                if (!movePossible)
+                if (!skip && !movePossible)
                 {
                     using (new ColorOutput(ConsoleColor.Red))
                     {
@@ -41,30 +44,41 @@ namespace AI_2048
                 }
 
                 Console.WriteLine("Use arrow keys to move the tiles. Press Ctrl-C to exit.");
-                ConsoleKeyInfo input = Console.ReadKey(true); // BLOCKING TO WAIT FOR INPUT
-                Console.WriteLine(input.Key.ToString());
-
-                switch (input.Key)
+                if (__Ai == null)
                 {
-                    case ConsoleKey.UpArrow:
-                        movePossible = Update(Direction.Up);
-                        break;
+                    ConsoleKeyInfo input = Console.ReadKey(true); // BLOCKING TO WAIT FOR INPUT
+                    Console.WriteLine(input.Key.ToString());
+                    switch (input.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            movePossible = Update(Direction.Up);
+                            skip = false;
+                            break;
 
-                    case ConsoleKey.DownArrow:
-                        movePossible = Update(Direction.Down);
-                        break;
+                        case ConsoleKey.DownArrow:
+                            movePossible = Update(Direction.Down);
+                            skip = false;
+                            break;
 
-                    case ConsoleKey.LeftArrow:
-                        movePossible = Update(Direction.Left);
-                        break;
+                        case ConsoleKey.LeftArrow:
+                            movePossible = Update(Direction.Left);
+                            skip = false;
+                            break;
 
-                    case ConsoleKey.RightArrow:
-                        movePossible = Update(Direction.Right);
-                        break;
+                        case ConsoleKey.RightArrow:
+                            movePossible = Update(Direction.Right);
+                            skip = false;
+                            break;
 
-                    default:
-                        movePossible = false;
-                        break;
+                        default:
+                            skip = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    var dir = __Ai.CalculateNextMove(__Board);
+                    movePossible = Update(dir);
                 }
             }
             while (true); // use CTRL-C to break out of loop
@@ -107,8 +121,8 @@ namespace AI_2048
         private bool Update(Direction dir)
         {
             __Board = __MoveMaker.MakePlayerMove(dir, __Board);
-            Score += (ulong)__Board.Score;
-            return !__Board.Equals(Board2048.NULL_BOARD);
+            Score = (ulong)__Board.Score;
+            return __Board.IsMovePossible;
         }
 
         private void Display()

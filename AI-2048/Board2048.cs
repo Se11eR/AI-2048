@@ -10,8 +10,6 @@ namespace AI_2048
 {
     internal struct Board2048 : IEquatable<Board2048>
     {
-        public static readonly Board2048 NULL_BOARD = new Board2048();
-
         public const long CONST2 = 1;
         public const long CONST4 = 2;
         public const double CONTS2_PROB = 0.9;
@@ -56,10 +54,10 @@ namespace AI_2048
         public int GetFreeCellsCount()
         {
             var count = 0;
-            for (var i = 0; i < 16; i++)
+            var allCells = Rows * Cols;
+            for (var i = 0; i < allCells; i++)
             {
-                var v = 0xf << i;
-                if ((__Repr & v) == 0)
+                if (((__Repr >> (i * 4)) & 0xF) == 0)
                     count++;
             }
 

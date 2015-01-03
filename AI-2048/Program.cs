@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace AI_2048
 {
-    class Program
+    internal static class Program
     {
         static void Main(string[] args)
         {
-            var game = new Game2048(new Ai2048());
+            var game = new Game2048(new Ai2048(), new Ai2048());
             game.Run();
         }
     }
