@@ -16,12 +16,9 @@ namespace AI_2048
         public Board2048 MakePlayerMove(Board2048 board,
                                         Direction dir,
                                         out int scoreDelta,
-                                        out bool nextMovePossible,
                                         out bool boardChanged)
         {
             scoreDelta = 0;
-            //TODO:
-            nextMovePossible = true;
             var originalBoard = new Board2048(board);
 
             //http://stackoverflow.com/a/22498940
@@ -71,6 +68,20 @@ namespace AI_2048
 
             boardChanged = !originalBoard.Equals(board);
             return board;
+        }
+
+        public bool IsGameOver(Board2048 board)
+        {
+            foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
+            {
+                int s;
+                bool changed;
+                MakePlayerMove(board, dir, out s, out changed);
+                if (changed)
+                    return false;
+            }
+
+            return true;
         }
 
         public Board2048 MakePlayerMoveOld(Direction dir, Board2048 board, out int score, out bool isMovePossible)

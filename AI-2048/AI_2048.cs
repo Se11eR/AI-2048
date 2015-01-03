@@ -17,17 +17,20 @@ namespace AI_2048
         {
             var max = 0.0;
             var bestDir = Direction.Down;
-            foreach (var dir in Helper.GetValues<Direction>())
+            foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
             {
                 int score;
-                bool possible;
                 bool changed;
                 var moveValue =
                     Expectimax(
-                               __MoveMaker.MakePlayerMove(board2048, dir, out score, out possible, out changed),
+                               __MoveMaker.MakePlayerMove(board2048, dir, out score, out changed),
                                0,
                                DEPTH,
                                Move.Player);
+
+                if (!changed)
+                    continue;
+
                 if (moveValue > max)
                 {
                     max = moveValue;
@@ -49,16 +52,18 @@ namespace AI_2048
                 case Move.Player:
                     var max = double.NegativeInfinity;
 
-                    foreach (var dir in Helper.GetValues<Direction>())
+                    foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
                     {
                         int scoreDelta;
-                        bool isMovePossible;
                         bool changed;
                         var move = __MoveMaker.MakePlayerMove(board,
                                                               dir,
                                                               out scoreDelta,
-                                                              out isMovePossible,
                                                               out changed);
+
+                        if (!changed)
+                            continue;
+
                         var moveValue = Expectimax(move, currentScore + scoreDelta, depth - 1, oppositeMove);
                         if (moveValue > max)
                         {

@@ -6,11 +6,6 @@ namespace AI_2048
 {
     public static class Helper
     {
-        public static IEnumerable<T> GetValues<T>()
-        {
-            return Enum.GetValues(typeof(T)).Cast<T>();
-        }
-
         public static long ReverseChunksInFirst2Bytes(long entry)
         {
             return ((entry & 0xF) << 12) | ((entry & 0xF000) >> 12) | ((entry & 0xF0) << 4)

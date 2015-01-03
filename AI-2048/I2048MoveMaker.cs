@@ -5,8 +5,9 @@
         Board2048 MakePlayerMove(Board2048 board,
                                  Direction dir,
                                  out int scoreDelta,
-                                 out bool nextMovePossible,
                                  out bool boardChanged);
+
+        bool IsGameOver(Board2048 board);
 
         Board2048 MakeSpecificGameMove(Board2048 board, int row, int col, long tile);
 

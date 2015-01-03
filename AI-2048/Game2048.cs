@@ -21,19 +21,11 @@ namespace AI_2048
 
         public void Run()
         {
-            bool nextMovePossible = true;
             bool boardChanged = true;
             bool skip = false;
             do
             {
-                if (boardChanged && !skip && nextMovePossible)
-                {
-                    __Board = __MoveMaker.MakeGameMove(__Board);
-                }
-
-                Display();
-
-                if (!skip && !nextMovePossible)
+                if (!skip && __MoveMaker.IsGameOver(__Board))
                 {
                     using (new ColorOutput(ConsoleColor.Red))
                     {
@@ -41,6 +33,13 @@ namespace AI_2048
                         break;
                     }
                 }
+
+                if (boardChanged && !skip)
+                {
+                    __Board = __MoveMaker.MakeGameMove(__Board);
+                }
+
+                Display();
 
                 Console.WriteLine("Use arrow keys to move the tiles. Press Ctrl-C to exit.");
                 if (__Ai == null)
@@ -50,22 +49,22 @@ namespace AI_2048
                     switch (input.Key)
                     {
                         case ConsoleKey.UpArrow:
-                            nextMovePossible = Update(Direction.Up, out boardChanged);
+                            boardChanged = Update(Direction.Up);
                             skip = false;
                             break;
 
                         case ConsoleKey.DownArrow:
-                            nextMovePossible = Update(Direction.Down, out boardChanged);
+                            boardChanged = Update(Direction.Down);
                             skip = false;
                             break;
 
                         case ConsoleKey.LeftArrow:
-                            nextMovePossible = Update(Direction.Left, out boardChanged);
+                            boardChanged = Update(Direction.Left);
                             skip = false;
                             break;
 
                         case ConsoleKey.RightArrow:
-                            nextMovePossible = Update(Direction.Right, out boardChanged);
+                            boardChanged = Update(Direction.Right);
                             skip = false;
                             break;
 
@@ -77,7 +76,7 @@ namespace AI_2048
                 else
                 {
                     var dir = __Ai.CalculateNextMove(__Board);
-                    nextMovePossible = Update(dir, out boardChanged);
+                    boardChanged = Update(dir);
                 }
             }
             while (true); // use CTRL-C to break out of loop
@@ -117,13 +116,13 @@ namespace AI_2048
             }
         }
 
-        private bool Update(Direction dir, out bool boardChanged)
+        private bool Update(Direction dir)
         {
             int score;
-            bool movePossible;
-            __Board = __MoveMaker.MakePlayerMove(__Board, dir, out score, out movePossible, out boardChanged);
+            bool boardChanged;
+            __Board = __MoveMaker.MakePlayerMove(__Board, dir, out score, out boardChanged);
             Score += (ulong)score;
-            return movePossible;
+            return boardChanged;
         }
 
         private void Display()
