@@ -29,22 +29,26 @@ namespace AI_2048
             switch (dir)
             {
                 case Direction.Up:
+                    board.Transpose();
                     for (int i = 0; i < board.Size; i++)
                     {
-                        var r = board.ExtractColumn(i);
-                        board.SetColumn(__SwipeLookup[r], i);
+                        var r = board.ExtractRow(i);
+                        board.SetRow(__SwipeLookup[r], i);
                         var sl = __ScoreLookup[r];
                         scoreDelta += sl > 0 ? (1 << sl) : 0;
                     }
+                    board.Transpose();
                     break;
                 case Direction.Down:
+                    board.Transpose();
                     for (int i = 0; i < board.Size; i++)
                     {
-                        var r = board.ExtractColumn(i);
-                        board.SetColumn(__ReverseSwipeLookup[r], i);
+                        var r = board.ExtractRow(i);
+                        board.SetRow(__ReverseSwipeLookup[r], i);
                         var sl = __ReverseScoreLookup[r];
                         scoreDelta += sl > 0 ? (1 << sl) : 0;
                     }
+                    board.Transpose();
                     break;
                 case Direction.Right:
                     for (int i = 0; i < board.Size; i++)

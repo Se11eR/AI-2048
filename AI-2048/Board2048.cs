@@ -78,17 +78,25 @@ namespace AI_2048
             return count;
         }
 
+        public int GetFreeCellsCount2()
+        {
+	        __Repr |= (__Repr >> 2) & 0x3333333333333333;
+	        __Repr |= (__Repr >> 1);
+            __Repr = ~__Repr & 0x1111111111111111;
+	        // At this point each nibble is:
+	        //  0 if the original nibble was non-zero
+	        //  1 if the original nibble was zero
+	        // Next sum them all
+            __Repr += __Repr >> 32;
+            __Repr += __Repr >> 16;
+            __Repr += __Repr >> 8;
+            __Repr += __Repr >> 4; // this can overflow to the next nibble if there were 16 empty positions
+            return (int)__Repr & 0xf;
+        }
+
         public long ExtractRow(int i)
         {
             return (long)(((ulong)__Repr & __RowsMask[i]) >> (i * 16));
-        }
-
-        public long ExtractColumn(int i)
-        {
-            var tmp = (long)(((ulong)__Repr & __ColsMask[i]) >> (i * 4));
-            return tmp & 0xF | ((tmp >> (( 4 - 1) * 4)) & 0xF0) 
-                             | ((tmp >> (( 8 - 2) * 4)) & 0xF00)
-                             | ((tmp >> ((12 - 3) * 4)) & 0xF000);
         }
 
         public void SetRow(long row, int i)
@@ -96,14 +104,19 @@ namespace AI_2048
             __Repr = (~((long)__RowsMask[i]) & __Repr) | (row << (i * 16));
         }
 
-        public void SetColumn(long col, int i)
+        public void Transpose()
         {
-            __Repr = (~((long)__ColsMask[i]) & __Repr)
-                        | ((col & 0xF 
-                        | (((col >> 4) & 0xF) << 16) 
-                        | (((col >> 8) & 0xF) << 32)
-                        | (((col >> 12) & 0xF) << 48)) << (i * 4));
-
+            unchecked
+            {
+                var a1 = (ulong)__Repr & 0xF0F00F0FF0F00F0F;
+	            var a2 = __Repr & 0x0000F0F00000F0F0;
+	            var a3 = __Repr & 0x0F0F00000F0F0000;
+                var a = a1 | (ulong)(a2 << 12) | (ulong)(a3 >> 12);
+	            var b1 = a & 0xFF00FF0000FF00FF;
+	            var b2 = a & 0x00FF00FF00000000;
+	            var b3 = a & 0x00000000FF00FF00;
+                __Repr = (long)(b1 | (b2 >> 24) | (b3 << 24));     
+            }
         }
 
         public int Size
