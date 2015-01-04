@@ -8,9 +8,13 @@ namespace AI_2048
         private readonly ushort[] __SwipeLookup;
         private readonly sbyte[] __ScoreLookup;
 
+        private readonly ushort[] __ReverseSwipeLookup;
+        private readonly sbyte[] __ReverseScoreLookup;
+
         public MoveMaker2048()
         {
             Helper.GenerateLookupScoresTable(4, out __SwipeLookup, out __ScoreLookup);
+            Helper.GenerateLookupScoresReverseTable(4, out __ReverseSwipeLookup, out __ReverseScoreLookup);
         }
 
         public Board2048 MakePlayerMove(Board2048 board,
@@ -25,7 +29,7 @@ namespace AI_2048
             switch (dir)
             {
                 case Direction.Up:
-                    for (int i = 0; i < board.Cols; i++)
+                    for (int i = 0; i < board.Size; i++)
                     {
                         var r = board.ExtractColumn(i);
                         board.SetColumn(__SwipeLookup[r], i);
@@ -34,27 +38,25 @@ namespace AI_2048
                     }
                     break;
                 case Direction.Down:
-                    for (int i = 0; i < board.Cols; i++)
+                    for (int i = 0; i < board.Size; i++)
                     {
                         var r = board.ExtractColumn(i);
-                        r = Helper.ReverseChunksInFirst2Bytes(r);
-                        board.SetColumn(Helper.ReverseChunksInFirst2Bytes(__SwipeLookup[r]), i);
-                        var sl = __ScoreLookup[r];
+                        board.SetColumn(__ReverseSwipeLookup[r], i);
+                        var sl = __ReverseScoreLookup[r];
                         scoreDelta += sl > 0 ? (1 << sl) : 0;
                     }
                     break;
                 case Direction.Right:
-                    for (int i = 0; i < board.Rows; i++)
+                    for (int i = 0; i < board.Size; i++)
                     {
                         var r = board.ExtractRow(i);
-                        r = Helper.ReverseChunksInFirst2Bytes(r);
-                        board.SetRow(Helper.ReverseChunksInFirst2Bytes(__SwipeLookup[r]), i);
-                        var sl = __ScoreLookup[r];
+                        board.SetRow(__ReverseSwipeLookup[r], i);
+                        var sl = __ReverseScoreLookup[r];
                         scoreDelta += sl > 0 ? (1 << sl) : 0;
                     }
                     break;
                 case Direction.Left:
-                    for (int i = 0; i < board.Rows; i++)
+                    for (int i = 0; i < board.Size; i++)
                     {
                         var r = board.ExtractRow(i);
                         board.SetRow(__SwipeLookup[r], i);
@@ -95,12 +97,12 @@ namespace AI_2048
 
                     #region Up
 
-                    for (int col = 0; col < board.Cols; col++)
+                    for (int col = 0; col < board.Size; col++)
                     {
                         // Проверяемая (опорная) и текущая ячейки
                         int pivot = 0, row = pivot + 1;
 
-                        while (row < board.Rows)
+                        while (row < board.Size)
                         {
                             // Текущая ячейка пуста, переходим на следующую
                             if (board[row, col] == 0)
@@ -133,9 +135,9 @@ namespace AI_2048
 
                     #region Down
 
-                    for (int col = 0; col < board.Cols; col++)
+                    for (int col = 0; col < board.Size; col++)
                     {
-                        int pivot = board.Rows - 1, row = pivot - 1;
+                        int pivot = board.Size - 1, row = pivot - 1;
 
                         while (row >= 0)
                         {
@@ -166,10 +168,10 @@ namespace AI_2048
 
                     #region Left
 
-                    for (int row = 0; row < board.Rows; row++)
+                    for (int row = 0; row < board.Size; row++)
                     {
                         int pivot = 0, col = pivot + 1;
-                        while (col < board.Cols)
+                        while (col < board.Size)
                         {
                             if (board[row, col] == 0)
                                 col++;
@@ -198,9 +200,9 @@ namespace AI_2048
 
                     #region Right
 
-                    for (int row = 0; row < board.Rows; row++)
+                    for (int row = 0; row < board.Size; row++)
                     {
-                        int pivot = board.Cols - 1, col = pivot - 1;
+                        int pivot = board.Size - 1, col = pivot - 1;
                         while (col >= 0)
                         {
                             if (board[row, col] == 0)
@@ -245,8 +247,8 @@ namespace AI_2048
             int randCol;
             do
             {
-                randRow = __Rand.Next(board.Rows);
-                randCol = __Rand.Next(board.Cols);
+                randRow = __Rand.Next(board.Size);
+                randCol = __Rand.Next(board.Size);
             }
             while (board[randRow, randCol] > 0);
 

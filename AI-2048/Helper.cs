@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-
 namespace AI_2048
 {
     public static class Helper
     {
-        public static long ReverseChunksInFirst2Bytes(long entry)
-        {
-            return ((entry & 0xF) << 12) | ((entry & 0xF000) >> 12) | ((entry & 0xF0) << 4)
-                   | ((entry & 0xF00) >> 4);
-        }
-
         private static int GetChunk(int entry, int i)
         {
             return (entry >> (i * 4)) & (0xF); 
@@ -49,17 +41,17 @@ namespace AI_2048
             {
                 int entry = i;
 
-                int pivot = 0, col = pivot + 1;
-                while (col < entryLengthInChunks)
+                int pivot = 0, elem = pivot + 1;
+                while (elem < entryLengthInChunks)
                 {
-                    if (GetChunk(entry, col) == 0)
-                        col++;
+                    if (GetChunk(entry, elem) == 0)
+                        elem++;
                     else if (GetChunk(entry, pivot) == 0)
                     {
-                        entry = SetChunk(entry, GetChunk(entry, col), pivot);
-                        entry = SetChunk(entry, 0, col++);
+                        entry = SetChunk(entry, GetChunk(entry, elem), pivot);
+                        entry = SetChunk(entry, 0, elem++);
                     }
-                    else if (GetChunk(entry, pivot) == GetChunk(entry, col))
+                    else if (GetChunk(entry, pivot) == GetChunk(entry, elem))
                     {
                         var chunk = GetChunk(entry, pivot);
 
@@ -67,11 +59,57 @@ namespace AI_2048
                         tableScores[i] += (sbyte)(chunk + 1);
                         pivot++;
 
-                        entry = SetChunk(entry, 0, col);
-                        col++;
+                        entry = SetChunk(entry, 0, elem);
+                        elem++;
                     }
-                    else if (++pivot == col)
-                        col++;
+                    else if (++pivot == elem)
+                        elem++;
+                }
+
+                tableLookup[i] = (ushort)entry;
+            }
+
+            lookup = tableLookup;
+            scores = tableScores;
+        }
+
+        public static void GenerateLookupScoresReverseTable(int entryLengthInChunks, out ushort[] lookup, out sbyte[] scores)
+        {
+            //Направление роста индекса чанков по направлению свайпа
+
+            //[CHUNK1] [CHUNK2] [CHUNK3] [CHUNK4]
+            //SWIPE ======================> SWIPE
+
+            var tableLookup = new ushort[65536];
+            var tableScores = new sbyte[65536];
+
+            for (int i = 0; i < tableLookup.Length; i++)
+            {
+                int entry = i;
+
+                int pivot = entryLengthInChunks - 1, row = pivot - 1;
+                while (row >= 0)
+                {
+                    if (GetChunk(entry, row) == 0)
+                        row--;
+                    else if (GetChunk(entry, pivot) == 0)
+                    {
+                        entry = SetChunk(entry, GetChunk(entry, row), pivot);
+                        entry = SetChunk(entry, 0, row--);
+                    }
+                    else if (GetChunk(entry, pivot) == GetChunk(entry, row))
+                    {
+                        var chunk = GetChunk(entry, pivot);
+
+                        entry = SetChunk(entry, chunk + 1, pivot);
+                        tableScores[i] += (sbyte)(chunk + 1);
+                        pivot--;
+
+                        entry = SetChunk(entry, 0, row);
+                        row--;
+                    }
+                    else if (--pivot == row)
+                        row--;
                 }
 
                 tableLookup[i] = (ushort)entry;

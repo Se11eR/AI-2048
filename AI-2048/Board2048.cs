@@ -68,7 +68,7 @@ namespace AI_2048
         public int GetFreeCellsCount()
         {
             var count = 0;
-            var allCells = Rows * Cols;
+            var allCells = Size * Size;
             for (var i = 0; i < allCells; i++)
             {
                 if (((__Repr >> (i * 4)) & 0xF) == 0)
@@ -106,15 +106,7 @@ namespace AI_2048
 
         }
 
-        public int Rows
-        {
-            get
-            {
-                return 4;
-            }
-        }
-
-        public int Cols
+        public int Size
         {
             get
             {
@@ -133,9 +125,9 @@ namespace AI_2048
         {
             var s = new StringWriter();
 
-            for (var row = 0; row < Rows; row++)
+            for (var row = 0; row < Size; row++)
             {
-                for (var col = 0; col < Cols; col++)
+                for (var col = 0; col < Size; col++)
                 {
                     var val = this[row, col];
                     var value = (ulong)(val > 0 ? (1 << (int)val) : 0);

@@ -102,7 +102,7 @@ namespace AI_2048
         {
             //"Насыщенность" поля: если весь счет сконцентрирован в одной клеточке - это хорошо
             //Если счет рассредоточен по разным клеточкам - плохо.
-            return (double)score / (board.Rows * board.Cols - board.GetFreeCellsCount());
+            return (double)score / (board.Size * board.Size - board.GetFreeCellsCount());
         }
 
         private static Move GetOppositeMove(Move move)
@@ -120,9 +120,9 @@ namespace AI_2048
 
         private IEnumerable<Board2048> GenerateAllGameMoves(Board2048 original, long tile)
         {
-            for (var row = 0; row < original.Rows; row++)
+            for (var row = 0; row < original.Size; row++)
             {
-                for (var col = 0; col < original.Cols; col++)
+                for (var col = 0; col < original.Size; col++)
                 {
                     if (original[row, col] <= 0)
                         yield return __MoveMaker.MakeSpecificGameMove(original, row, col, tile);

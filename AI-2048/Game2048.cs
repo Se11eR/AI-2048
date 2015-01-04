@@ -129,9 +129,9 @@ namespace AI_2048
         {
             Console.Clear();
             Console.WriteLine();
-            for (var row = 0; row < __Board.Rows; row++)
+            for (var row = 0; row < __Board.Size; row++)
             {
-                for (var col = 0; col < __Board.Cols; col++)
+                for (var col = 0; col < __Board.Size; col++)
                 {
                     var val = __Board[row, col];
                     var value = (ulong)(val > 0 ? (1 << (int)val) : 0);
