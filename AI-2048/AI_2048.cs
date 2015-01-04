@@ -15,6 +15,14 @@ namespace AI_2048
 
         public Direction CalculateNextMove(Board2048 board2048)
         {
+            //TODO:
+            //Heuristics: Smoothness, Monotonicity, Empty cells
+            //http://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048/22389702#22389702
+            //http://blog.datumbox.com/using-artificial-intelligence-to-solve-the-2048-game-java-code/
+            //Smoothness, Monotonicity, Empty cells
+            //Transposition tables
+            //Unlikely nodes: dont go deep in nodes that are not likely to happen (e.g. 4 "4"s in a row)
+
             var max = 0.0;
             var bestDir = Direction.Down;
             foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
