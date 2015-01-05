@@ -69,7 +69,7 @@ namespace AI_2048
                 }
                 else
                 {
-                    var dir = __Ai.CalculateNextMove(__Board);
+                    var dir = __Ai.CalculateNextMove(__Board, (int)Score);
                     if (dir == null)
                         break;
                     boardChanged = Update(dir.Value);

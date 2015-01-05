@@ -1,23 +1,22 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AI_2048
 {
     internal class Ai2048 : IAi2048
     {
-        private const int MAX_CACHE_DEPTH = 5;
-
         private readonly IMoveMaker2048 __MoveMaker;
         private const int DEPTH = 6;
-        private readonly Dictionary<long, double> __TransposTable = new Dictionary<long, double>();
-        
+        private readonly ConcurrentDictionary<long, double> __TransposTable = new ConcurrentDictionary<long, double>();
 
         public Ai2048(IMoveMaker2048 moveMaker)
         {
             __MoveMaker = moveMaker;
         }
 
-        public Direction? CalculateNextMove(Board2048 board2048)
+        public Direction? CalculateNextMove(Board2048 board2048, int currentScore)
         {
             //TODO:
             //Heuristics: Smoothness, Monotonicity, Empty cells
@@ -31,26 +30,30 @@ namespace AI_2048
 
             var max = double.NegativeInfinity;
             Direction? bestDir = null;
-            foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
-            {
-                int score;
-                bool changed;
-                var moveValue =
-                    Expectimax(
-                        __MoveMaker.MakePlayerMove(board2048, dir, out score, out changed),
-                        0,
-                        DEPTH,
-                        Move.Player);
+            Parallel.ForEach(new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right},
+                             dir =>
+                             {
+                                 int score;
+                                 bool changed;
+                                 var moveValue =
+                                     Expectimax(
+                                                __MoveMaker.MakePlayerMove(board2048,
+                                                                           dir,
+                                                                           out score,
+                                                                           out changed),
+                                                currentScore,
+                                                DEPTH,
+                                                Move.Player);
 
-                if (!changed)
-                    continue;
+                                 if (!changed)
+                                     return;
 
-                if (moveValue > max)
-                {
-                    max = moveValue;
-                    bestDir = dir;
-                }
-            }
+                                 if (moveValue > max)
+                                 {
+                                     max = moveValue;
+                                     bestDir = dir;
+                                 }
+                             });
 
             return bestDir;
         }
