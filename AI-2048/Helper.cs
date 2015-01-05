@@ -9,19 +9,9 @@ namespace AI_2048
             return (entry >> (i * 4)) & (0xF); 
         }
 
-        public static long GetChunk(long entry, int i)
-        {
-            return (entry >> (i * 4)) & (0xFL);
-        }
-
         private static int SetChunk(int entry, int chunk, int i)
         {
             return (~(0xF << (i * 4)) & entry) | (chunk << (i * 4));
-        }
-
-        public static long SetChunk(long entry, long chunk, int i)
-        {
-            return (~(0xFL << (i * 4)) & entry) | (chunk << (i * 4));
         }
 
         public static void GenerateLookupScoresTable(int entryLengthInChunks, out ushort[] lookup, out sbyte[] scores)

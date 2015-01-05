@@ -25,14 +25,8 @@ namespace AI_2048
             bool skip = false;
             do
             {
-                if (!skip && __MoveMaker.IsGameOver(__Board))
-                {
-                    using (new ColorOutput(ConsoleColor.Red))
-                    {
-                        Console.WriteLine("YOU ARE DEAD!!!");
-                        break;
-                    }
-                }
+                if (__MoveMaker.IsGameOver(__Board))
+                    break;
 
                 if (boardChanged && !skip)
                 {
@@ -76,10 +70,17 @@ namespace AI_2048
                 else
                 {
                     var dir = __Ai.CalculateNextMove(__Board);
-                    boardChanged = Update(dir);
+                    if (dir == null)
+                        break;
+                    boardChanged = Update(dir.Value);
                 }
             }
             while (true); // use CTRL-C to break out of loop
+
+            using (new ColorOutput(ConsoleColor.Red))
+            {
+                Console.WriteLine("YOU ARE DEAD!!!");
+            }
 
             Console.WriteLine("Press any key to quit...");
             Console.Read();
@@ -129,9 +130,9 @@ namespace AI_2048
         {
             Console.Clear();
             Console.WriteLine();
-            for (var row = 0; row < __Board.Size; row++)
+            for (var row = 0; row < Board2048.SIZE; row++)
             {
-                for (var col = 0; col < __Board.Size; col++)
+                for (var col = 0; col < Board2048.SIZE; col++)
                 {
                     var val = __Board[row, col];
                     var value = (ulong)(val > 0 ? (1 << (int)val) : 0);
