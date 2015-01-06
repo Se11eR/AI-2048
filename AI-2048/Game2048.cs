@@ -6,17 +6,17 @@ namespace AI_2048
     {
         private readonly IMoveMaker2048 __MoveMaker;
         private readonly IAi2048 __Ai;
-        public ulong Score { get; private set; }
 
         private Board2048 __Board;
+        private long __Score;
 
         public Game2048(IMoveMaker2048 moveMaker, IAi2048 ai = null)
         {
             __MoveMaker = moveMaker;
             __Ai = ai;
-            Score = 0;
+            __Score = 0;
             __Board = new Board2048();
-            __Board = __MoveMaker.MakeGameMove(__Board);
+            __Board = __MoveMaker.MakeGameMove(__Board, out __Score);
         }
 
         public void Run()
@@ -30,7 +30,9 @@ namespace AI_2048
 
                 if (boardChanged && !skip)
                 {
-                    __Board = __MoveMaker.MakeGameMove(__Board);
+                    long score;
+                    __Board = __MoveMaker.MakeGameMove(__Board, out score);
+                    __Score += score;
                 }
 
                 Display();
@@ -69,7 +71,7 @@ namespace AI_2048
                 }
                 else
                 {
-                    var dir = __Ai.CalculateNextMove(__Board, (int)Score);
+                    var dir = __Ai.CalculateNextMove(__Board, __Score);
                     if (dir == null)
                         break;
                     boardChanged = Update(dir.Value);
@@ -119,10 +121,10 @@ namespace AI_2048
 
         private bool Update(Direction dir)
         {
-            int score;
+            long score;
             bool boardChanged;
             __Board = __MoveMaker.MakePlayerMove(__Board, dir, out score, out boardChanged);
-            Score += (ulong)score;
+            __Score += score;
             return boardChanged;
         }
 
@@ -146,7 +148,7 @@ namespace AI_2048
                 Console.WriteLine();
             }
 
-            Console.WriteLine("Score: {0}", Score);
+            Console.WriteLine("Score: {0}", __Score);
             Console.WriteLine();
         }
 

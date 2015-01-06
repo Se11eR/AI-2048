@@ -14,7 +14,7 @@ namespace AI_2048
             return (~(0xF << (i * 4)) & entry) | (chunk << (i * 4));
         }
 
-        public static void GenerateLookupScoresTable(int entryLengthInChunks, out ushort[] lookup, out sbyte[] scores)
+        public static void GenerateLookupScoresTable(out ushort[] lookup, out uint[] scores)
         {
             //Направление роста индекса чанков противоположно направлению свайпа
 
@@ -25,14 +25,14 @@ namespace AI_2048
             ////http://stackoverflow.com/a/22498940
             ////http://www.cyberforum.ru/csharp-net/thread1172757.html
             var tableLookup = new ushort[65536];
-            var tableScores = new sbyte[65536];
+            var tableScores = new uint[65536];
 
             for (int i = 0; i < tableLookup.Length; i++)
             {
                 int entry = i;
 
                 int pivot = 0, elem = pivot + 1;
-                while (elem < entryLengthInChunks)
+                while (elem < 4)
                 {
                     if (GetChunk(entry, elem) == 0)
                         elem++;
@@ -46,7 +46,7 @@ namespace AI_2048
                         var chunk = GetChunk(entry, pivot);
 
                         entry = SetChunk(entry, chunk + 1, pivot);
-                        tableScores[i] += (sbyte)(chunk + 1);
+                        tableScores[i] += (uint)(1 << (chunk + 1));
                         pivot++;
 
                         entry = SetChunk(entry, 0, elem);
@@ -63,7 +63,7 @@ namespace AI_2048
             scores = tableScores;
         }
 
-        public static void GenerateLookupScoresReverseTable(int entryLengthInChunks, out ushort[] lookup, out sbyte[] scores)
+        public static void GenerateLookupScoresReverseTable(out ushort[] lookup, out uint[] scores)
         {
             //Направление роста индекса чанков по направлению свайпа
 
@@ -71,13 +71,13 @@ namespace AI_2048
             //SWIPE ======================> SWIPE
 
             var tableLookup = new ushort[65536];
-            var tableScores = new sbyte[65536];
+            var tableScores = new uint[65536];
 
             for (int i = 0; i < tableLookup.Length; i++)
             {
                 int entry = i;
 
-                int pivot = entryLengthInChunks - 1, row = pivot - 1;
+                int pivot = 4 - 1, row = pivot - 1;
                 while (row >= 0)
                 {
                     if (GetChunk(entry, row) == 0)
@@ -92,7 +92,7 @@ namespace AI_2048
                         var chunk = GetChunk(entry, pivot);
 
                         entry = SetChunk(entry, chunk + 1, pivot);
-                        tableScores[i] += (sbyte)(chunk + 1);
+                        tableScores[i] += (uint)(1 << (chunk + 1));
                         pivot--;
 
                         entry = SetChunk(entry, 0, row);

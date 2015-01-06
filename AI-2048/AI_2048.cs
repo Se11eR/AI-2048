@@ -16,14 +16,13 @@ namespace AI_2048
             __MoveMaker = moveMaker;
         }
 
-        public Direction? CalculateNextMove(Board2048 board2048, int currentScore)
+        public Direction? CalculateNextMove(Board2048 board2048, long currentScore)
         {
-            //TODO: SCORES FIX! (calculated wrong!
+            //TODO:
             //Сейчас в таблице хранится степень двойки, и при построении таблицы они суммируется, но степень не аддитивная функция!
             //Heuristics: Smoothness, Monotonicity, Empty cells
             //http://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048/22389702#22389702
             //http://blog.datumbox.com/using-artificial-intelligence-to-solve-the-2048-game-java-code/
-            //Smoothness, Monotonicity, Empty cells
             //Iterative deeping, fixed time moves
             //Unlikely nodes: dont go deep in nodes that are not likely to happen (e.g. 4 "4"s in a row)
 
@@ -34,7 +33,7 @@ namespace AI_2048
             Parallel.ForEach(new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right},
                              dir =>
                              {
-                                 int score;
+                                 long score;
                                  bool changed;
                                  var moveValue =
                                      Expectimax(
@@ -59,7 +58,7 @@ namespace AI_2048
             return bestDir;
         }
 
-        private double Expectimax(Board2048 board, int currentScore, int depth, Move curMove)
+        private double Expectimax(Board2048 board, long currentScore, int depth, Move curMove)
         {
             double weight;
             if (depth <= 0)
@@ -94,12 +93,13 @@ namespace AI_2048
 
                     foreach (var dir in new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right})
                     {
-                        int scoreDelta;
+                        long scoreDelta;
                         bool boardChanged;
                         var move = __MoveMaker.MakePlayerMove(board,
                             dir,
                             out scoreDelta,
                             out boardChanged);
+
                         if (!boardChanged)
                         {
                             continue;
@@ -121,20 +121,36 @@ namespace AI_2048
                     var movesCount = 0;
 
                     var sum = 0.0;
-                    foreach (var move in GenerateAllGameMoves(board, Board2048.CONST2))
+                    for (var row = 0; row < Board2048.SIZE; row++)
                     {
-                        movesCount++;
-                        sum += Expectimax(move, currentScore, depth - 1, oppositeMove);
+                        for (var col = 0; col < Board2048.SIZE; col++)
+                        {
+                            if (board[row, col] > 0) 
+                                continue;
+
+                            var move = __MoveMaker.MakeSpecificGameMove(board, row, col, Board2048.CONST2);
+                            movesCount++;
+                            sum += Expectimax(move, currentScore, depth - 1, oppositeMove);
+                        }
                     }
+
                     var weightenedSum = ((sum / movesCount) * Board2048.CONTS2_PROB);
 
                     sum = 0.0;
                     movesCount = 0;
-                    foreach (var move in GenerateAllGameMoves(board, Board2048.CONST4))
+                    for (var row = 0; row < Board2048.SIZE; row++)
                     {
-                        movesCount++;
-                        sum += Expectimax(move, currentScore, depth - 1, oppositeMove);
+                        for (var col = 0; col < Board2048.SIZE; col++)
+                        {
+                            if (board[row, col] > 0)
+                                continue;
+
+                            var move = __MoveMaker.MakeSpecificGameMove(board, row, col, Board2048.CONST4);
+                            movesCount++;
+                            sum += Expectimax(move, currentScore + 4, depth - 1, oppositeMove);
+                        }
                     }
+
                     weightenedSum += ((sum / movesCount) * Board2048.CONTS4_PROB);
 
                     return weightenedSum;
@@ -143,7 +159,7 @@ namespace AI_2048
             }
         }
 
-        private static double StaticEvaluationFunction(Board2048 board, int score)
+        private static double StaticEvaluationFunction(Board2048 board, long score)
         {
             //"Насыщенность" поля: если весь счет сконцентрирован в одной клеточке - это хорошо
             //Если счет рассредоточен по разным клеточкам - плохо.
