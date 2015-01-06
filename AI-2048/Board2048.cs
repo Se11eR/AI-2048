@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace AI_2048
@@ -62,19 +63,6 @@ namespace AI_2048
         }
 
         public int GetFreeCellsCount()
-        {
-            var count = 0;
-            var allCells = SIZE * SIZE;
-            for (var i = 0; i < allCells; i++)
-            {
-                if (((Repr >> (i * 4)) & 0xF) == 0)
-                    count++;
-            }
-
-            return count;
-        }
-
-        public int GetFreeCellsCount2()
         {
 	        Repr |= (Repr >> 2) & 0x3333333333333333;
 	        Repr |= (Repr >> 1);
