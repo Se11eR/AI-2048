@@ -7,8 +7,10 @@ namespace AI_2048
 {
     internal class Ai2048 : IAi2048
     {
-        private readonly IMoveMaker2048 __MoveMaker;
         private const int DEPTH = 6;
+        private const double PROB_THRESHOLD = 0.0001;
+
+        private readonly IMoveMaker2048 __MoveMaker;
         private readonly ConcurrentDictionary<long, double> __TransposTable = new ConcurrentDictionary<long, double>();
 
         public Ai2048(IMoveMaker2048 moveMaker)
@@ -19,17 +21,17 @@ namespace AI_2048
         public Direction? CalculateNextMove(Board2048 board2048, long currentScore)
         {
             //TODO:
-            //Сейчас в таблице хранится степень двойки, и при построении таблицы они суммируется, но степень не аддитивная функция!
             //Heuristics: Smoothness, Monotonicity, Empty cells
             //http://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048/22389702#22389702
             //http://blog.datumbox.com/using-artificial-intelligence-to-solve-the-2048-game-java-code/
             //Iterative deeping, fixed time moves
-            //Unlikely nodes: dont go deep in nodes that are not likely to happen (e.g. 4 "4"s in a row)
 
             __TransposTable.Clear();
 
             var max = double.NegativeInfinity;
             Direction? bestDir = null;
+            var state = new SearchState(currentScore, DEPTH, Move.Player, 1);
+
             Parallel.ForEach(new[] {Direction.Up, Direction.Down, Direction.Left, Direction.Right},
                              dir =>
                              {
@@ -37,13 +39,11 @@ namespace AI_2048
                                  bool changed;
                                  var moveValue =
                                      Expectimax(
-                                                __MoveMaker.MakePlayerMove(board2048,
-                                                                           dir,
-                                                                           out score,
-                                                                           out changed),
-                                                currentScore,
-                                                DEPTH,
-                                                Move.Player);
+                                         __MoveMaker.MakePlayerMove(board2048,
+                                             dir,
+                                             out score,
+                                             out changed),
+                                         state);
 
                                  if (!changed)
                                      return;
@@ -58,12 +58,15 @@ namespace AI_2048
             return bestDir;
         }
 
-        private double Expectimax(Board2048 board, long currentScore, int depth, Move curMove)
+        private double Expectimax(Board2048 board, SearchState state)
         {
+            if (state.CurProb < PROB_THRESHOLD)
+                return double.MinValue;
+
             double weight;
-            if (depth <= 0)
+            if (state.Depth <= 0)
             {
-                var eval = StaticEvaluationFunction(board, currentScore);
+                var eval = StaticEvaluationFunction(board, state.CurrentScore);
 
                 if (__TransposTable.TryGetValue(board.Repr, out weight))
                 {
@@ -85,7 +88,7 @@ namespace AI_2048
                 return weight;
             }
 
-            var oppositeMove = GetOppositeMove(curMove);
+            var oppositeMove = GetOppositeMove(state.CurMove);
             switch (oppositeMove)
             {
                 case Move.Player:
@@ -105,7 +108,7 @@ namespace AI_2048
                             continue;
                         }
 
-                        var moveValue = Expectimax(move, currentScore + scoreDelta, depth - 1, oppositeMove);
+                        var moveValue = Expectimax(move, new SearchState(state.CurrentScore + scoreDelta, state.Depth - 1, oppositeMove, state.CurProb));
                         if (moveValue > max)
                         {
                             max = moveValue;
@@ -130,7 +133,9 @@ namespace AI_2048
 
                             var move = __MoveMaker.MakeSpecificGameMove(board, row, col, Board2048.CONST2);
                             movesCount++;
-                            sum += Expectimax(move, currentScore, depth - 1, oppositeMove);
+                            sum += Expectimax(move,
+                                new SearchState(state.CurrentScore, state.Depth - 1, oppositeMove,
+                                    state.CurProb * Board2048.CONTS2_PROB));
                         }
                     }
 
@@ -147,7 +152,9 @@ namespace AI_2048
 
                             var move = __MoveMaker.MakeSpecificGameMove(board, row, col, Board2048.CONST4);
                             movesCount++;
-                            sum += Expectimax(move, currentScore + 4, depth - 1, oppositeMove);
+                            sum += Expectimax(move,
+                                new SearchState(state.CurrentScore + 4, state.Depth - 1, oppositeMove,
+                                    state.CurProb * Board2048.CONTS2_PROB));
                         }
                     }
 
@@ -163,7 +170,7 @@ namespace AI_2048
         {
             //"Насыщенность" поля: если весь счет сконцентрирован в одной клеточке - это хорошо
             //Если счет рассредоточен по разным клеточкам - плохо.
-            return (double)score / (Board2048.SIZE * Board2048.SIZE - board.GetFreeCellsCount());
+            return (double) score / (Board2048.SIZE * Board2048.SIZE - board.GetFreeCellsCount());
         }
 
         private static Move GetOppositeMove(Move move)
@@ -176,18 +183,6 @@ namespace AI_2048
                     return Move.Player;
                 default:
                     throw new ArgumentOutOfRangeException("move");
-            }
-        }
-
-        private IEnumerable<Board2048> GenerateAllGameMoves(Board2048 original, long tile)
-        {
-            for (var row = 0; row < Board2048.SIZE; row++)
-            {
-                for (var col = 0; col < Board2048.SIZE; col++)
-                {
-                    if (original[row, col] <= 0)
-                        yield return __MoveMaker.MakeSpecificGameMove(original, row, col, tile);
-                }
             }
         }
     }
