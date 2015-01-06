@@ -14,6 +14,43 @@ namespace AI_2048
             return (~(0xF << (i * 4)) & entry) | (chunk << (i * 4));
         }
 
+        private static int[] GetSingleBlock(int entry)
+        {
+            var block = new int[4];
+
+            for (var i = 0; i < 4; i++)
+            {
+                block[i] = GetChunk(entry, i);
+            }
+
+            return block;
+        }
+
+        public static void GenerateHeurScoresTable(out double[] heur)
+        {
+            for (var i = 0; i < 65536; i++)
+            {
+                var entry = i;
+                var block = GetSingleBlock(entry);
+
+                var mon_increase = 0.0;
+                var mon_decrease = 0.0;
+                for (int j = 1; j < block.Length; j++)
+                {
+                    if (block[j] > block[j - 1])
+                    {
+                        mon_increase += Math.Pow(block[j], 3) - Math.Pow(block[j - 1], 3);
+                    }
+                    else
+                    {
+                        mon_decrease += Math.Pow(block[j - 1], 3) - Math.Pow(block[j], 3);
+                    }
+                }
+
+
+            }
+        }
+
         public static void GenerateLookupScoresTable(out ushort[] lookup, out uint[] scores)
         {
             //Направление роста индекса чанков противоположно направлению свайпа
