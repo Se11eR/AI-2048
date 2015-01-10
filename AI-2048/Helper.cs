@@ -28,25 +28,65 @@ namespace AI_2048
 
         public static void GenerateHeurScoresTable(out double[] heur)
         {
+            heur = new double[65536];
+
             for (var i = 0; i < 65536; i++)
             {
-                var entry = i;
-                var block = GetSingleBlock(entry);
+                var block = GetSingleBlock(i);
 
-                var mon_increase = 0.0;
-                var mon_decrease = 0.0;
+                var monIncrease = 0.0;
+                var monDecrease = 0.0;
+                var empty = 0;
+                var merges = 0;
+                var sumAll = 0.0;
+
+                int prev = 0;
+                int counter = 0;
+                for (int j = 0; j < 4; ++j)
+                {
+                    int rank = block[j];
+                    sumAll += Math.Pow(rank, 3.5);
+                    if (rank == 0)
+                        empty++;
+                    else
+                    {
+                        if (prev == rank)
+                        {
+                            counter++;
+                        }
+                        else if (counter > 0)
+                        {
+                            merges += 1 + counter;
+                            counter = 0;
+                        }
+                        prev = rank;
+                    }
+                }
+                if (counter > 0)
+                {
+                    merges += 1 + counter;
+                }
+
                 for (int j = 1; j < block.Length; j++)
                 {
                     if (block[j] > block[j - 1])
                     {
-                        mon_increase += Math.Pow(block[j], 3) - Math.Pow(block[j - 1], 3);
+                        monIncrease += Math.Pow(block[j], 4) - Math.Pow(block[j - 1], 4);
                     }
-                    else
+                    else if (block[j] < block[j - 1])
                     {
-                        mon_decrease += Math.Pow(block[j - 1], 3) - Math.Pow(block[j], 3);
+                        monDecrease += Math.Pow(block[j - 1], 4) - Math.Pow(block[j], 4);
                     }
                 }
 
+                const double SCORE_EMPTY_WEIGHT = 270.0;
+                const double SCORE_MERGES_WEIGHT = 700.0;
+                const double SCORE_SUM_WEIGHT = 11.0;
+                const double SCORE_MONOTONICITY_WEIGHT = 47;
+                heur[i] =   SCORE_EMPTY_WEIGHT * empty 
+                          + SCORE_MERGES_WEIGHT * merges
+                          - SCORE_SUM_WEIGHT * sumAll
+                          - SCORE_MONOTONICITY_WEIGHT * Math.Min(monIncrease, monDecrease);
 
             }
         }

@@ -5,11 +5,13 @@ namespace AI_2048
     internal class MoveMaker2048 : IMoveMaker2048
     {
         private readonly Random __Rand = new Random(Int32.MaxValue / 2);
+        
         private readonly ushort[] __SwipeLookup;
         private readonly uint[] __ScoreLookup;
 
         private readonly ushort[] __ReverseSwipeLookup;
         private readonly uint[] __ReverseScoreLookup;
+
 
         public MoveMaker2048()
         {

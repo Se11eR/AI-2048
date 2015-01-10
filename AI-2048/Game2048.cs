@@ -23,6 +23,7 @@ namespace AI_2048
         {
             bool boardChanged = true;
             bool skip = false;
+            int prevDepth = 0;
             do
             {
                 if (__MoveMaker.IsGameOver(__Board))
@@ -37,6 +38,7 @@ namespace AI_2048
 
                 Display();
 
+                Console.WriteLine("Depth: " + prevDepth);
                 Console.WriteLine("Use arrow keys to move the tiles. Press Ctrl-C to exit.");
                 if (__Ai == null)
                 {
@@ -71,7 +73,7 @@ namespace AI_2048
                 }
                 else
                 {
-                    var dir = __Ai.CalculateNextMove(__Board, __Score);
+                    var dir = __Ai.CalculateNextMove(__Board, __Score, out prevDepth);
                     if (dir == null)
                         break;
                     boardChanged = Update(dir.Value);
